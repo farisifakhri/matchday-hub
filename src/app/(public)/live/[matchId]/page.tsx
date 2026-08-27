@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Trophy, Radio, Clock, ShieldAlert, Sparkles } from "lucide-react";
 
-export default function PublicLiveScoreboardPage({ params }: { params: { matchId: string } }) {
+export default function PublicLiveScoreboardPage({ params }: { params: Promise<{ matchId: string }> }) {
+  const resolvedParams = React.use(params);
   const [activeTab, setActiveTab] = useState<"TIMELINE" | "LINEUPS">("TIMELINE");
 
   const matchData = {

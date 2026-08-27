@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { matchId: string } }
+  { params }: { params: Promise<{ matchId: string }> }
 ) {
+  const { matchId } = await params;
   // Generate high-fidelity HTML-based Official Match Sheet (BAP) that is 100% print/PDF ready
   const htmlContent = `<!DOCTYPE html>
 <html lang="id">

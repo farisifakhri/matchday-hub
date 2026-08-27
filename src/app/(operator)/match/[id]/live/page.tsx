@@ -40,7 +40,8 @@ interface EventLog {
   description: string;
 }
 
-export default function OperatorLiveMatchPage({ params }: { params: { id: string } }) {
+export default function OperatorLiveMatchPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = React.use(params);
   // Clock state: 20 minutes (1200 seconds) countdown for futsal
   const [secondsLeft, setSecondsLeft] = useState<number>(1200);
   const [isRunning, setIsRunning] = useState<boolean>(false);
