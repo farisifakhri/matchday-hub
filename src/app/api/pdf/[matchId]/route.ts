@@ -140,19 +140,19 @@ export async function GET(
     </tbody>
   </table>
 
-  <div class="section-title">3. Pengesahan Perangkat Pertandingan (Match Officials Signatures)</div>
+  <div class="section-title">3. Pengesahan Perangkat Pertandingan Resmi (Official Signatures)</div>
   <div class="signatures">
     <div class="sign-box">
-      <small>Wasit 1 (First Referee)</small>
-      <div class="sign-line">Agus Hendrawan, S.Pd<br><span style="font-size: 9px; font-weight: normal; color: #64748b;">(Lic: Level 1 Nasional)</span></div>
+      <small>Wasit Utama (1st Referee)</small>
+      <div class="sign-line">Agus Hendrawan, S.Pd<br><span style="font-size: 9px; font-weight: normal; color: #64748b;">(Lic: Level 1 Nasional PSSI)</span></div>
     </div>
     <div class="sign-box">
       <small>Wasit 2 (Second Referee)</small>
-      <div class="sign-line">Deni Hermawan<br><span style="font-size: 9px; font-weight: normal; color: #64748b;">(Lic: Level 2 Daerah)</span></div>
+      <div class="sign-line">Deni Hermawan<br><span style="font-size: 9px; font-weight: normal; color: #64748b;">(Lic: Level 2 Daerah AFP)</span></div>
     </div>
     <div class="sign-box">
-      <small>Pencatat Waktu (Timekeeper)</small>
-      <div class="sign-line">Rian Prasetyo<br><span style="font-size: 9px; font-weight: normal; color: #64748b;">(Lic: Level 3 Daerah)</span></div>
+      <small>Pengawas Pertandingan (Match Commissioner)</small>
+      <div class="sign-line">Drs. H. Mulyadi<br><span style="font-size: 9px; font-weight: normal; color: #64748b;">(Komisi Pertandingan PSSI)</span></div>
     </div>
   </div>
 </body>
@@ -165,3 +165,4 @@ export async function GET(
     },
   });
 }
+
