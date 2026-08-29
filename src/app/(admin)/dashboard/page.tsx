@@ -1,178 +1,305 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
-import { Trophy, Users, FileText, ArrowLeft, ShieldCheck, PlayCircle, Calendar } from "lucide-react";
+import Navbar from "@/components/layout/Navbar";
+import { 
+  Trophy, 
+  Users, 
+  FileText, 
+  ArrowLeft, 
+  ShieldCheck, 
+  PlayCircle, 
+  Calendar, 
+  Sparkles, 
+  CheckCircle, 
+  XCircle, 
+  Image as ImageIcon, 
+  Download, 
+  Share2,
+  Tv,
+  Layers
+} from "lucide-react";
 
-export default function AdminDashboardPage() {
-  const standings = [
-    { rank: 1, team: "Garuda Muda FC", played: 1, won: 1, drawn: 0, lost: 0, gf: 3, ga: 1, gd: "+2", pts: 3 },
-    { rank: 2, team: "Rajawali Futsal Club", played: 1, won: 0, drawn: 0, lost: 1, gf: 1, ga: 3, gd: "-2", pts: 0 },
-    { rank: 3, team: "Bintang Timur Futsal", played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: "0", pts: 0 },
-    { rank: 4, team: "Cosmo JNE Futsal", played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: "0", pts: 0 },
-  ];
+export default function OrganizerAdminDashboardPage() {
+  const [selectedPosterType, setSelectedPosterType] = useState<"LINEUP" | "SCORECARD">("SCORECARD");
+  const [posterGenerated, setPosterGenerated] = useState(false);
 
-  const matches = [
-    { id: "match-1", number: 1, court: "Court 1", time: "14:00", home: "Garuda Muda FC", away: "Rajawali Futsal Club", status: "LIVE", score: "1 - 0" },
-    { id: "match-2", number: 2, court: "Court 1", time: "16:00", home: "Bintang Timur Futsal", away: "Cosmo JNE Futsal", status: "UPCOMING", score: "vs" },
-  ];
+  // Screening submissions for Helper Admin
+  const [screeningList, setScreeningList] = useState([
+    { id: "sc1", playerName: "Syahrul Ramadhan", team: "Garuda Muda FC", docType: "KTP Elektronik", status: "PENDING" },
+    { id: "sc2", playerName: "Bagas Maulana", team: "Garuda Muda FC", docType: "NISN / Kartu Pelajar", status: "PENDING" },
+    { id: "sc3", playerName: "Dimas Wicaksono", team: "Rajawali Futsal Club", docType: "KTP Elektronik", status: "VERIFIED" },
+  ]);
 
-  const referees = [
-    { name: "Agus Hendrawan, S.Pd", role: "1st Referee", license: "Level 1 Nasional (PSSI)", status: "Assigned • Match #1" },
-    { name: "Deni Hermawan", role: "2nd Referee", license: "Level 2 Daerah (AFP JBR)", status: "Assigned • Match #1" },
-    { name: "Rian Prasetyo", role: "Timekeeper", license: "Level 3 Daerah (AFP DKI)", status: "Assigned • Match #1" },
-  ];
+  const handleVerify = (id: string, newStatus: "VERIFIED" | "REJECTED") => {
+    setScreeningList(prev => prev.map(item => item.id === id ? { ...item, status: newStatus } : item));
+  };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* Admin Header */}
-      <header className="h-16 border-b border-slate-800 bg-slate-900 px-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
+    <div className="min-h-screen bg-[#f5f5f5] text-[#222222] flex flex-col font-sans">
+      <Navbar currentSport="FUTSAL" currentRole="SUPER_ADMIN" />
+
+      <main className="max-w-7xl mx-auto w-full p-6 space-y-6 flex-1">
+        {/* Header & Overview */}
+        <div className="bg-white border border-[#f0f0f0] rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
-            <h1 className="font-bold text-base text-white">Super League Championship Futsal 2026</h1>
-            <span className="text-xs text-slate-400">Tournament Administration & BAP Management</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Link
-            href="/match/sample-match/live"
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs transition"
-          >
-            <PlayCircle className="w-4 h-4" /> Open Live Operator
-          </Link>
-        </div>
-      </header>
-
-      {/* Admin Body */}
-      <main className="max-w-7xl mx-auto w-full p-6 space-y-8">
-        
-        {/* Top Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-            <div className="text-xs text-slate-400">Total Teams</div>
-            <div className="text-2xl font-bold text-white mt-1">4 Clubs</div>
-          </div>
-          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-            <div className="text-xs text-slate-400">Matches Scheduled</div>
-            <div className="text-2xl font-bold text-white mt-1">12 Fixtures</div>
-          </div>
-          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-            <div className="text-xs text-slate-400">Licensed Officials</div>
-            <div className="text-2xl font-bold text-emerald-400 mt-1">6 Referees</div>
-          </div>
-          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-            <div className="text-xs text-slate-400">Validated BAPs</div>
-            <div className="text-2xl font-bold text-cyan-400 mt-1">1 Generated</div>
-          </div>
-        </div>
-
-        {/* 2 Column Layout: Matches & Standings */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Matches & Schedule (7 Cols) */}
-          <div className="lg:col-span-7 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-bold text-lg text-white flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-emerald-400" /> Matchday Fixtures
-              </h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-[#fef3c7] text-[#92400e]">
+                PORTAL 3: ORGANIZER & EVENT ADMIN
+              </span>
             </div>
+            <h1 className="text-2xl font-extrabold text-[#222222] mt-1">
+              Super League Championship Futsal 2026
+            </h1>
+            <p className="text-xs text-[#666666]">
+              Master Turnamen, Screening Berkas Atlet, Sponsor Placement & 1-Click Social Media Kit.
+            </p>
+          </div>
 
-            <div className="space-y-3">
-              {matches.map((m) => (
-                <div
-                  key={m.id}
-                  className="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-400">Match #{m.number}</span>
-                      <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-                        {m.court} • {m.time}
-                      </span>
-                      {m.status === "LIVE" && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-950 text-red-400 border border-red-800 font-bold animate-pulse">
-                          LIVE
-                        </span>
-                      )}
-                    </div>
-                    <div className="font-bold text-white text-base">
-                      {m.home} <span className="text-emerald-400 px-2">{m.score}</span> {m.away}
-                    </div>
-                  </div>
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/overlay/match/sample-match"
+              target="_blank"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#e5e5e5] hover:bg-slate-50 text-[#222222] text-xs font-bold transition shadow-sm"
+            >
+              <Tv className="w-4 h-4 text-[#d71149]" />
+              <span>OBS Overlay</span>
+            </Link>
 
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href="/api/pdf/sample-match"
-                      target="_blank"
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition"
-                    >
-                      <FileText className="w-3.5 h-3.5 text-emerald-400" /> BAP (PDF)
-                    </Link>
-                  </div>
+            <Link
+              href="/operator/match/sample-match/live"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#222222] hover:bg-[#383838] text-white font-bold text-xs shadow-sm transition"
+            >
+              <PlayCircle className="w-4 h-4 text-[#eab308]" />
+              <span>Buka Konsol Meja</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Top Metric Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="p-4 rounded-2xl bg-white border border-[#f0f0f0] shadow-sm">
+            <div className="text-xs text-[#666666] font-medium">Total Tim Peserta</div>
+            <div className="text-2xl font-black text-[#222222] mt-1">4 Klub (Lunas)</div>
+          </div>
+          <div className="p-4 rounded-2xl bg-white border border-[#f0f0f0] shadow-sm">
+            <div className="text-xs text-[#666666] font-medium">Jadwal Laga (Fixtures)</div>
+            <div className="text-2xl font-black text-[#222222] mt-1">12 Pertandingan</div>
+          </div>
+          <div className="p-4 rounded-2xl bg-white border border-[#f0f0f0] shadow-sm">
+            <div className="text-xs text-[#666666] font-medium">Perangkat Wasit</div>
+            <div className="text-2xl font-black text-[#0a8a4a] mt-1">6 Wasit Berlisensi</div>
+          </div>
+          <div className="p-4 rounded-2xl bg-white border border-[#f0f0f0] shadow-sm">
+            <div className="text-xs text-[#666666] font-medium">Pendapatan Turnamen</div>
+            <div className="text-2xl font-black text-[#d71149] mt-1">Rp 6.000.000</div>
+          </div>
+        </div>
+
+        {/* 2-Column Section: Screening Matrix (Left) & 1-Click Social Media Kit (Right) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left: Screening Berkas KTP / NISN */}
+          <div className="lg:col-span-6 space-y-4">
+            <div className="bg-white border border-[#f0f0f0] rounded-2xl p-5 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-[#f0f0f0] pb-3">
+                <div>
+                  <h3 className="font-extrabold text-base text-[#222222]">
+                    Panel Screening & Verifikasi Berkas (Helper Admin)
+                  </h3>
+                  <p className="text-xs text-[#666666]">
+                    Validasi keaslian identitas atlet sebelum Digital Pass diterbitkan
+                  </p>
                 </div>
-              ))}
-            </div>
+              </div>
 
-            {/* Referee Assignment Matrix */}
-            <div className="mt-8 pt-6 border-t border-slate-800 space-y-3">
-              <h3 className="font-bold text-base text-white flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-cyan-400" /> Referee Assignment & License Validation
-              </h3>
-              <div className="space-y-2">
-                {referees.map((ref, idx) => (
+              <div className="space-y-3">
+                {screeningList.map((item) => (
                   <div
-                    key={idx}
-                    className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs"
+                    key={item.id}
+                    className="p-3.5 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] flex items-center justify-between gap-3 text-xs"
                   >
                     <div>
-                      <div className="font-semibold text-slate-200">{ref.name}</div>
-                      <div className="text-slate-400">{ref.license}</div>
+                      <div className="font-bold text-sm text-[#222222]">{item.playerName}</div>
+                      <div className="text-[11px] text-[#666666] mt-0.5">
+                        {item.team} • Dokumen: <strong className="text-[#374151]">{item.docType}</strong>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className="px-2 py-1 rounded bg-slate-800 text-cyan-400 font-medium">
-                        {ref.role}
-                      </span>
+
+                    <div className="flex items-center gap-1.5">
+                      {item.status === "VERIFIED" ? (
+                        <span className="px-2.5 py-1 rounded-lg bg-[#dcfce7] text-[#166534] font-bold text-[11px]">
+                          ✓ Lolos
+                        </span>
+                      ) : item.status === "REJECTED" ? (
+                        <span className="px-2.5 py-1 rounded-lg bg-[#fee2e2] text-[#991b1b] font-bold text-[11px]">
+                          ✕ Ditolak
+                        </span>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleVerify(item.id, "VERIFIED")}
+                            className="px-2.5 py-1.5 rounded-lg bg-[#0a8a4a] text-white font-bold hover:bg-[#08733d] transition"
+                          >
+                            Setujui
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleVerify(item.id, "REJECTED")}
+                            className="px-2.5 py-1.5 rounded-lg bg-[#fee2e2] text-[#991b1b] font-bold hover:bg-[#fecaca] transition"
+                          >
+                            Tolak
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
+
+            {/* Sponsorship Placement Manager */}
+            <div className="bg-white border border-[#f0f0f0] rounded-2xl p-5 shadow-sm space-y-3">
+              <h3 className="font-extrabold text-sm text-[#222222]">
+                Sponsorship Placement Engine
+              </h3>
+              <p className="text-xs text-[#666666]">
+                Logo sponsor aktif otomatis muncul di scoreboard live, PDF BAP, OBS stream, dan poster medsos:
+              </p>
+
+              <div className="grid grid-cols-3 gap-3 pt-2">
+                <div className="p-3 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] text-center">
+                  <div className="text-[10px] font-bold text-[#d71149] uppercase">Title Sponsor</div>
+                  <div className="font-extrabold text-xs text-[#222222] mt-1">Bank Mandiri</div>
+                </div>
+                <div className="p-3 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] text-center">
+                  <div className="text-[10px] font-bold text-[#0a8a4a] uppercase">Apparel Partner</div>
+                  <div className="font-extrabold text-xs text-[#222222] mt-1">Specs Indonesia</div>
+                </div>
+                <div className="p-3 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] text-center">
+                  <div className="text-[10px] font-bold text-blue-600 uppercase">Drink Partner</div>
+                  <div className="font-extrabold text-xs text-[#222222] mt-1">Hydro Coco</div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Standings Table (5 Cols) */}
-          <div className="lg:col-span-5 space-y-4">
-            <h2 className="font-bold text-lg text-white flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-amber-400" /> Tournament Standings
-            </h2>
+          {/* Right: 1-Click Social Media Match Graphics Generator */}
+          <div className="lg:col-span-6 space-y-4">
+            <div className="bg-white border border-[#f0f0f0] rounded-2xl p-5 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-[#f0f0f0] pb-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[#eab308]" />
+                  <div>
+                    <h3 className="font-extrabold text-base text-[#222222]">
+                      1-Click Social Media Poster Kit
+                    </h3>
+                    <p className="text-xs text-[#666666]">
+                      Generator grafis otomatis untuk Instagram Feed & Story (Resolusi HD)
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-            <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-800/60 text-slate-400 font-semibold border-b border-slate-800">
-                  <tr>
-                    <th className="p-3 text-center">#</th>
-                    <th className="p-3">Team</th>
-                    <th className="p-3 text-center">P</th>
-                    <th className="p-3 text-center">GD</th>
-                    <th className="p-3 text-center">Pts</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800 text-slate-300">
-                  {standings.map((team) => (
-                    <tr key={team.rank} className="hover:bg-slate-800/30">
-                      <td className="p-3 text-center font-bold text-slate-400">{team.rank}</td>
-                      <td className="p-3 font-semibold text-white">{team.team}</td>
-                      <td className="p-3 text-center">{team.played}</td>
-                      <td className="p-3 text-center text-slate-400">{team.gd}</td>
-                      <td className="p-3 text-center font-bold text-emerald-400">{team.pts}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {/* Poster Mode Selector */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPosterType("SCORECARD")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    selectedPosterType === "SCORECARD"
+                      ? "bg-[#222222] text-white shadow-sm"
+                      : "bg-[#f3f4f6] text-[#4b5563]"
+                  }`}
+                >
+                  Full-Time Scorecard
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPosterType("LINEUP")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    selectedPosterType === "LINEUP"
+                      ? "bg-[#222222] text-white shadow-sm"
+                      : "bg-[#f3f4f6] text-[#4b5563]"
+                  }`}
+                >
+                  Starting Lineup Poster
+                </button>
+              </div>
+
+              {/* Dynamic Poster Preview Container */}
+              <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-gradient-to-br from-[#1c1917] via-[#292524] to-[#0c0a09] text-white p-6 flex flex-col justify-between shadow-lg border border-[#44403c]">
+                {/* Poster Header */}
+                <div className="flex items-center justify-between border-b border-white/20 pb-3">
+                  <div className="text-left">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[#fbbf24]">
+                      OFFICIAL TOURNAMENT MATCHDAY
+                    </span>
+                    <h4 className="text-xs font-extrabold text-white">Super League Championship 2026</h4>
+                  </div>
+                  <div className="text-right text-[10px] font-bold text-white/80">
+                    GOR Brodjonegoro
+                  </div>
+                </div>
+
+                {/* Poster Content */}
+                {selectedPosterType === "SCORECARD" ? (
+                  <div className="text-center my-auto space-y-3">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#dc2626] text-white font-black text-[10px] tracking-wider">
+                      FULL TIME RESULT
+                    </span>
+
+                    <div className="flex items-center justify-center gap-6">
+                      <div>
+                        <div className="text-xs font-black text-[#dc2626] uppercase">GARUDA MUDA</div>
+                        <div className="text-4xl font-black font-mono">4</div>
+                      </div>
+                      <div className="text-lg font-bold text-white/40">vs</div>
+                      <div>
+                        <div className="text-xs font-black text-[#3b82f6] uppercase">RAJAWALI FC</div>
+                        <div className="text-4xl font-black font-mono">2</div>
+                      </div>
+                    </div>
+
+                    <div className="text-[11px] text-white/80 font-medium">
+                      ⚽ Fajar P. 4&apos;, 28&apos; • ⚽ Syahrul 19&apos; | ⚽ Dimas W. 14&apos;
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center my-auto space-y-2">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#0a8a4a] text-white font-black text-[10px] tracking-wider">
+                      STARTING FIVE (5v5)
+                    </span>
+                    <h5 className="font-extrabold text-sm text-white">GARUDA MUDA FC</h5>
+                    <div className="grid grid-cols-5 gap-1 text-[10px] text-white/90 pt-1">
+                      <div className="bg-white/10 p-1.5 rounded-lg">#1 Ridwan (GK)</div>
+                      <div className="bg-white/10 p-1.5 rounded-lg">#4 Kurnia (C)</div>
+                      <div className="bg-white/10 p-1.5 rounded-lg">#7 Pratama</div>
+                      <div className="bg-white/10 p-1.5 rounded-lg">#10 Ramadhan</div>
+                      <div className="bg-white/10 p-1.5 rounded-lg">#11 Saputra</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Poster Footer (Sponsors) */}
+                <div className="flex items-center justify-between border-t border-white/20 pt-3 text-[9px] text-white/60">
+                  <span>MatchDay Hub Engine</span>
+                  <span>Presented by: Bank Mandiri • Specs Indonesia</span>
+                </div>
+              </div>
+
+              {/* Download / Share Actions */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPosterGenerated(true)}
+                  className="flex-1 py-2.5 rounded-xl bg-[#222222] hover:bg-[#383838] text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2"
+                >
+                  <Download className="w-4 h-4 text-[#eab308]" />
+                  <span>{posterGenerated ? "✓ Poster Berhasil Di-Download" : "Unduh Grafis Instagram HD"}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

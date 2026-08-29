@@ -9,10 +9,22 @@ generator client {
 
 enum Role {
   SUPER_ADMIN
-  TOURNAMENT_ADMIN
-  MATCH_OPERATOR
+  HELPER_ADMIN
+  HELPER_SPORT
+  HELPER_EVENT
+  MATCH_COMMISSIONER
+  ANALYST_TEAM
+  REFEREE_ASSESSOR
   REFEREE
-  PUBLIC_USER
+  ADMIN_CLUB
+  PLAYER
+  MEDIA
+  USER
+}
+
+enum SportType {
+  FOOTBALL
+  FUTSAL
 }
 
 enum MatchStatus {
@@ -52,15 +64,60 @@ enum RefereeRole {
   ASSESSOR
 }
 
+// ==========================================
+// 1. OTENTIKASI & USER PROFILES
+// ==========================================
+
 model User {
   id             String          @id @default(cuid())
   email          String          @unique
-  passwordHash   String
+  emailVerified  DateTime?
+  passwordHash   String?
   fullName       String
-  role           Role            @default(PUBLIC_USER)
+  image          String?
+  phoneNumber    String?
+  role           Role            @default(USER)
+  accounts       Account[]
+  sessions       Session[]
   refereeProfile RefereeProfile?
+  clubProfile    ClubProfile?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model RefereeProfile {
@@ -75,19 +132,51 @@ model RefereeProfile {
   updatedAt       DateTime        @updatedAt
 }
 
-model Tournament {
-  id          String      @id @default(cuid())
-  name        String
-  slug        String      @unique
-  season      String
-  category    String      // e.g., "Men Open", "U-20", "Student"
-  startDate   DateTime
-  endDate     DateTime
-  teams       Team[]
-  matches     Match[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+model ClubProfile {
+  id              String          @id @default(cuid())
+  userId          String          @unique
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId          String?
+  position        String          // e.g., "Head Coach", "Team Manager"
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 }
+
+// ==========================================
+// 2. TURNAMEN & SPONSOR
+// ==========================================
+
+model Tournament {
+  id              String          @id @default(cuid())
+  name            String
+  slug            String          @unique
+  season          String
+  category        String          // e.g., "Men Open", "U-20", "Student"
+  sportType       SportType       @default(FUTSAL)
+  registrationFee Decimal?        @default(0.00)
+  startDate       DateTime
+  endDate         DateTime
+  sponsors        Sponsor[]
+  teams           Team[]
+  matches         Match[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Sponsor {
+  id           String      @id @default(cuid())
+  tournamentId String
+  tournament   Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  name         String
+  logoUrl      String?
+  tier         String      @default("OFFICIAL") // "TITLE", "MAIN", "OFFICIAL", "MEDIA"
+  websiteUrl   String?
+  createdAt    DateTime    @default(now())
+}
+
+// ==========================================
+// 3. TIM & PEMAIN
+// ==========================================
 
 model Team {
   id            String         @id @default(cuid())
@@ -97,6 +186,7 @@ model Team {
   code          String         // e.g., "GLT", "FCB"
   logoUrl       String?
   officialColor String?        // Hex code for scoreboard badges
+  paymentStatus String         @default("PENDING") // PENDING, PAID, REFUNDED
   players       Player[]
   homeMatches   Match[]        @relation("HomeTeam")
   awayMatches   Match[]        @relation("AwayTeam")
@@ -107,20 +197,30 @@ model Team {
 }
 
 model Player {
-  id           String       @id @default(cuid())
-  teamId       String
-  team         Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  jerseyNumber Int
-  fullName     String
-  position     String       // GK, Anchor, Flank, Pivot
-  isCaptain    Boolean      @default(false)
-  matchLineups MatchLineup[]
-  events       MatchEvent[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id              String         @id @default(cuid())
+  teamId          String
+  team            Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  jerseyNumber    Int
+  fullName        String
+  position        String         // GK, Anchor, Flank, Pivot / RB, CB, LB, CDM, CAM, ST
+  isCaptain       Boolean        @default(false)
+  photoUrl        String?
+  documentUrl     String?        // KTP/NISN
+  screeningStatus String         @default("PENDING") // PENDING, VERIFIED, REJECTED
+  qrCodeToken     String?        @unique
+  isSuspended     Boolean        @default(false)
+  ratings         PlayerRating[]
+  matchLineups    MatchLineup[]
+  events          MatchEvent[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   @@unique([teamId, jerseyNumber])
 }
+
+// ==========================================
+// 4. PERTANDINGAN & MATCH EVENTS
+// ==========================================
 
 model Match {
   id              String          @id @default(cuid())
@@ -149,13 +249,30 @@ model Match {
   homeTimeoutsH2  Int             @default(0)
   awayTimeoutsH2  Int             @default(0)
 
-  pdfReportUrl    String?
+  pdfReportUrl     String?
+  commissionerSign String?
+  motmPlayerId     String?
+  
+  ratings         PlayerRating[]
   events          MatchEvent[]
   officials       MatchOfficial[]
   lineups         MatchLineup[]
   
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+}
+
+model PlayerRating {
+  id        String   @id @default(cuid())
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  rating    Decimal  @default(6.00)
+  isMOTM    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([matchId, playerId])
 }
 
 model MatchOfficial {

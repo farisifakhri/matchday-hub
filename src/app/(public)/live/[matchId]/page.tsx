@@ -1,203 +1,109 @@
-"use client";
+import { getMatchById, getTournamentData } from "@/lib/data/get-tournament-data";
+import MatchCenterDetailClient from "@/components/match/MatchCenterDetailClient";
+import { MatchDetailData, StandingItem } from "@/types/match";
+import { notFound } from "next/navigation";
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Trophy, Radio, Clock, ShieldAlert, Sparkles } from "lucide-react";
+export const revalidate = 0;
 
-export default function PublicLiveScoreboardPage({ params }: { params: Promise<{ matchId: string }> }) {
-  const resolvedParams = React.use(params);
-  const [activeTab, setActiveTab] = useState<"TIMELINE" | "LINEUPS">("TIMELINE");
+export default async function PublicLiveScoreboardPage({
+  params,
+}: {
+  params: Promise<{ matchId: string }>;
+}) {
+  const { matchId } = await params;
 
-  const matchData = {
-    tournament: "Super League Championship Futsal 2026",
-    stage: "Group Stage • Group A",
-    venue: "GOR Sumantri Brodjonegoro (Court 1)",
-    status: "FIRST_HALF",
-    clock: "15:28",
-    homeTeam: {
-      name: "Garuda Muda FC",
-      code: "GDA",
-      score: 1,
-      fouls: 2,
-      color: "#dc2626",
-      starters: ["#1 Muhammad Ridwan (GK)", "#4 Bambang Kurnia (C)", "#7 Fajar Pratama", "#10 Syahrul Ramadhan", "#11 Andi Saputra"],
-    },
-    awayTeam: {
-      name: "Rajawali Futsal Club",
-      code: "RJW",
-      score: 0,
-      fouls: 3,
-      color: "#2563eb",
-      starters: ["#12 Dimas Wicaksono (GK)", "#5 Eko Prasetyo", "#8 Rizky Firmansyah (C)", "#9 Hadi Gunawan", "#14 Kevin Alamsyah"],
-    },
-    timeline: [
-      { id: "e1", minute: 4, second: 32, period: "1H", team: "GDA", type: "GOAL", text: "GOAL! Fajar Pratama (#7) strikes into the bottom left corner." },
-      { id: "e2", minute: 7, second: 10, period: "1H", team: "RJW", type: "FOUL", text: "Foul committed by #5 Eko Prasetyo." },
-      { id: "e3", minute: 9, second: 45, period: "1H", team: "GDA", type: "YELLOW_CARD", text: "Yellow Card issued to #10 Syahrul Ramadhan for reckless tackle." },
-    ],
-  };
+  let matchData: MatchDetailData | null = null;
+  let standings: StandingItem[] = [];
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* Top Navbar */}
-      <header className="h-14 border-b border-slate-800 bg-slate-900/80 backdrop-blur px-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/"
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-red-500 animate-pulse" />
-            <span className="font-bold text-sm text-white">MATCHDAY LIVE MATCH CENTER</span>
-          </div>
-        </div>
-        <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 font-semibold">
-          LIVE STREAM SYNC
-        </span>
-      </header>
+  // 1. If it's a real match ID, fetch from Prisma
+  if (matchId && matchId !== "sample-match") {
+    matchData = await getMatchById(matchId);
+  }
 
-      {/* Hero Live Score Banner */}
-      <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-b border-slate-800 py-10 px-4">
-        <div className="max-w-4xl mx-auto flex flex-col items-center">
-          <div className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">
-            {matchData.tournament}
-          </div>
-          <div className="text-xs text-slate-500 mb-6">
-            {matchData.stage} • {matchData.venue}
-          </div>
+  // 2. Fallback to first available live/recent match if sample-match or not found
+  if (!matchData) {
+    const defaultData = await getTournamentData("FOOTBALL");
+    if (defaultData && defaultData.matches.length > 0) {
+      matchData = await getMatchById(defaultData.matches[0].id);
+      standings = defaultData.standings;
+    }
+  }
 
-          {/* Live Score Block */}
-          <div className="w-full grid grid-cols-11 items-center justify-items-center gap-2">
-            {/* Home Team */}
-            <div className="col-span-4 flex flex-col items-end text-right">
-              <div className="h-14 w-14 rounded-2xl bg-red-600/20 border border-red-500/40 flex items-center justify-center font-black text-xl text-red-400 mb-2">
-                {matchData.homeTeam.code}
-              </div>
-              <h2 className="font-extrabold text-xl sm:text-2xl text-white">{matchData.homeTeam.name}</h2>
-              <div className="text-xs text-slate-400 mt-1">
-                Accumulated Fouls: <span className="font-bold text-amber-400">{matchData.homeTeam.fouls}/5</span>
-              </div>
-            </div>
+  // 3. Fallback mock if database isn't reachable
+  if (!matchData) {
+    matchData = {
+      id: matchId || "sample-match",
+      tournamentId: "t1",
+      tournamentName: "Premier Football Championship 2026",
+      sportType: "FOOTBALL",
+      matchNumber: 1,
+      stage: "Matchday 1",
+      venue: "Stadion Utama Gelora Bung Karno",
+      scheduledAt: new Date().toISOString(),
+      status: "SECOND_HALF",
+      clockFormatted: "68:15",
+      period: "2H",
+      homeTeam: {
+        id: "team-1",
+        name: "Arsenal FC Nusantara",
+        code: "ARS",
+        officialColor: "#dc2626",
+        score: 2,
+        foulsH1: 4,
+        foulsH2: 3,
+        timeoutsH1: 0,
+        timeoutsH2: 0,
+        starters: [
+          { id: "p1", fullName: "David Raya", jerseyNumber: 1, position: "GK" },
+          { id: "p2", fullName: "Ben White", jerseyNumber: 4, position: "RB" },
+          { id: "p3", fullName: "William Saliba", jerseyNumber: 2, position: "CB" },
+          { id: "p4", fullName: "Gabriel Magalhaes", jerseyNumber: 6, position: "CB" },
+          { id: "p5", fullName: "Jurrien Timber", jerseyNumber: 12, position: "LB" },
+          { id: "p6", fullName: "Thomas Partey", jerseyNumber: 5, position: "CDM" },
+          { id: "p7", fullName: "Declan Rice", jerseyNumber: 41, position: "CM" },
+          { id: "p8", fullName: "Martin Odegaard", jerseyNumber: 8, position: "CAM", isCaptain: true },
+          { id: "p9", fullName: "Bukayo Saka", jerseyNumber: 7, position: "RW" },
+          { id: "p10", fullName: "Kai Havertz", jerseyNumber: 29, position: "ST" },
+          { id: "p11", fullName: "Gabriel Martinelli", jerseyNumber: 11, position: "LW" },
+        ],
+      },
+      awayTeam: {
+        id: "team-2",
+        name: "Chelsea FC Indonesia",
+        code: "CHE",
+        officialColor: "#2563eb",
+        score: 1,
+        foulsH1: 5,
+        foulsH2: 4,
+        timeoutsH1: 0,
+        timeoutsH2: 0,
+        starters: [
+          { id: "p12", fullName: "Robert Sanchez", jerseyNumber: 1, position: "GK" },
+          { id: "p13", fullName: "Malo Gusto", jerseyNumber: 27, position: "RB" },
+          { id: "p14", fullName: "Wesley Fofana", jerseyNumber: 29, position: "CB" },
+          { id: "p15", fullName: "Levi Colwill", jerseyNumber: 6, position: "CB" },
+          { id: "p16", fullName: "Marc Cucurella", jerseyNumber: 3, position: "LB" },
+          { id: "p17", fullName: "Moises Caicedo", jerseyNumber: 25, position: "CDM" },
+          { id: "p18", fullName: "Enzo Fernandez", jerseyNumber: 8, position: "CM", isCaptain: true },
+          { id: "p19", fullName: "Cole Palmer", jerseyNumber: 20, position: "CAM" },
+          { id: "p20", fullName: "Noni Madueke", jerseyNumber: 11, position: "RW" },
+          { id: "p21", fullName: "Nicolas Jackson", jerseyNumber: 15, position: "ST" },
+          { id: "p22", fullName: "Pedro Neto", jerseyNumber: 7, position: "LW" },
+        ],
+      },
+      events: [
+        { id: "e1", minute: 14, second: 20, period: "1H", type: "GOAL", notes: "Bukayo Saka curling finish", player: { id: "p9", fullName: "Bukayo Saka", jerseyNumber: 7, position: "RW" } },
+        { id: "e2", minute: 38, second: 45, period: "1H", type: "YELLOW_CARD", notes: "Tackle on midfield", player: { id: "p17", fullName: "Moises Caicedo", jerseyNumber: 25, position: "CDM" } },
+        { id: "e3", minute: 44, second: 10, period: "1H", type: "PENALTY_GOAL", notes: "Cole Palmer penalty", player: { id: "p19", fullName: "Cole Palmer", jerseyNumber: 20, position: "CAM" } },
+        { id: "e4", minute: 61, second: 18, period: "2H", type: "GOAL", notes: "Kai Havertz header", player: { id: "p10", fullName: "Kai Havertz", jerseyNumber: 29, position: "ST" } },
+      ],
+      officials: [
+        { name: "Agus Hendrawan, S.Pd", role: "Wasit Utama", license: "Level 1 Nasional (FIFA/PSSI)" },
+        { name: "Deni Hermawan", role: "Asisten Wasit 1", license: "Level 2 Daerah" },
+        { name: "Rian Prasetyo", role: "Cadangan Wasit", license: "Level 3 Daerah" },
+      ],
+    };
+  }
 
-            {/* Score & Period Status */}
-            <div className="col-span-3 flex flex-col items-center text-center">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold mb-2">
-                <span className="h-2 w-2 rounded-full bg-red-500 animate-ping" />
-                1ST HALF
-              </div>
-              <div className="text-5xl sm:text-7xl font-extrabold text-white tracking-wider font-mono">
-                {matchData.homeTeam.score} - {matchData.awayTeam.score}
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono font-bold mt-2 bg-slate-900 px-3 py-1 rounded-lg border border-slate-800">
-                <Clock className="w-3.5 h-3.5" /> {matchData.clock}
-              </div>
-            </div>
-
-            {/* Away Team */}
-            <div className="col-span-4 flex flex-col items-start text-left">
-              <div className="h-14 w-14 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center font-black text-xl text-blue-400 mb-2">
-                {matchData.awayTeam.code}
-              </div>
-              <h2 className="font-extrabold text-xl sm:text-2xl text-white">{matchData.awayTeam.name}</h2>
-              <div className="text-xs text-slate-400 mt-1">
-                Accumulated Fouls: <span className="font-bold text-amber-400">{matchData.awayTeam.fouls}/5</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs & Content */}
-      <div className="max-w-4xl mx-auto w-full px-4 py-8 flex-1">
-        <div className="flex border-b border-slate-800 mb-6 gap-6">
-          <button
-            onClick={() => setActiveTab("TIMELINE")}
-            className={`pb-3 font-semibold text-sm transition relative ${
-              activeTab === "TIMELINE" ? "text-emerald-400" : "text-slate-400 hover:text-white"
-            }`}
-          >
-            Match Incident Timeline
-            {activeTab === "TIMELINE" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("LINEUPS")}
-            className={`pb-3 font-semibold text-sm transition relative ${
-              activeTab === "LINEUPS" ? "text-emerald-400" : "text-slate-400 hover:text-white"
-            }`}
-          >
-            Starting Lineups & Rosters
-            {activeTab === "LINEUPS" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400" />
-            )}
-          </button>
-        </div>
-
-        {activeTab === "TIMELINE" ? (
-          <div className="space-y-4">
-            {matchData.timeline.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-start gap-4"
-              >
-                <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-mono font-bold text-xs text-emerald-400">
-                  {item.minute}&apos;
-                </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`text-xs font-bold px-2 py-0.5 rounded ${
-                        item.type === "GOAL"
-                          ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
-                          : item.type === "YELLOW_CARD"
-                          ? "bg-yellow-950 text-yellow-400 border border-yellow-800"
-                          : "bg-slate-800 text-slate-300"
-                      }`}
-                    >
-                      {item.type}
-                    </span>
-                    <span className="text-xs text-slate-500">[{item.period}]</span>
-                  </div>
-                  <p className="text-sm text-slate-200">{item.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-5 rounded-xl bg-slate-900 border border-slate-800">
-              <h4 className="font-bold text-white mb-3 text-sm flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
-                {matchData.homeTeam.name}
-              </h4>
-              <ul className="space-y-2 text-sm text-slate-300">
-                {matchData.homeTeam.starters.map((player, idx) => (
-                  <li key={idx} className="p-2 rounded-lg bg-slate-950 border border-slate-800/80">
-                    {player}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="p-5 rounded-xl bg-slate-900 border border-slate-800">
-              <h4 className="font-bold text-white mb-3 text-sm flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
-                {matchData.awayTeam.name}
-              </h4>
-              <ul className="space-y-2 text-sm text-slate-300">
-                {matchData.awayTeam.starters.map((player, idx) => (
-                  <li key={idx} className="p-2 rounded-lg bg-slate-950 border border-slate-800/80">
-                    {player}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return <MatchCenterDetailClient match={matchData} standings={standings} />;
 }
